@@ -32,7 +32,48 @@ class BasicLLM(LLM):
             text = text,
             model = model
         )
-        return summary
+        return summary.summary_text
+
+###########################################################################################
+## 3. Decoradores
+###########################################################################################
+
+class DecoratorLLM(LLM, ABC):
+
+    _LLM: LLM = None
+
+    def __init__(self, _LLM: LLM):
+        self._LLM = _LLM
+
+    @abstractmethod
+    def generate_summary(self, text: str, input_lang: str, output_lang: str, model: str) -> str:
+        pass
+
+# Decorador 1: Traducción
+class TranslationDecorator(DecoratorLLM):
+   
+
+    def generate_summary(self, text: str, input_lang: str, output_lang: str, model: str) -> str:
+        summary = self._LLM.generate_summary(text, input_lang, output_lang, model)
+        translation = client.translation(
+            text = summary,
+            model = MODEL_TRANSLATION + input_lang + "-" + output_lang
+        )
+
+        return translation.translation_text
+    
+# Decorador 2: Expansión
+class ExpansionDecorator(DecoratorLLM):
+   
+
+    def generate_summary(self, text: str, input_lang: str, output_lang: str, model: str) -> str:
+        summary = self._LLM.generate_summary(text, input_lang, output_lang, model)
+        expansion = client.text_generation(
+            prompt = summary,
+            model = MODEL_EXPANSION 
+        )
+
+        return expansion
 
 ###########################################################################################
 ## 4. Codigo cliente
@@ -55,7 +96,23 @@ client = InferenceClient(
 	api_key=API_TOKEN
 )
 
-LLM = BasicLLM
-result = LLM.generate_summary(LLM, TEXTO, "en", "es", MODEL_LLM)
+#LLamamos al resumen básico
 
-print(result)
+
+LLM = BasicLLM()
+summary = LLM.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+
+print("Resumen básico: " + summary)
+
+translation_decorator = TranslationDecorator(LLM)
+translation = translation_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+print("Resumen traducido: " + translation)
+
+expansion_decorator = ExpansionDecorator(LLM)
+expansion = expansion_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+print("Expansión del resumen" + expansion)
+
+#Traducimos y expandimos
+double_decorator = ExpansionDecorator(TranslationDecorator(LLM))
+double_decoration = double_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+print("Resumen traducido y expandido" + double_decoration)

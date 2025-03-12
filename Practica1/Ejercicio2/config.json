@@ -1,9 +1,9 @@
 {
-    "texto": "Me encantan las croquetas",
+    "texto": "Paris is a city in France full of people and crowded. It is full of tourists because it is one of the most beautiful cities in the world",
     "input_lang": "en",
     "output_lang": "es",
     "model_llm": "facebook/bart-large-cnn",
-    "model_translation": "Helsinki-NLP/opus-mt-en-es",
+    "model_translation": "Helsinki-NLP/opus-mt-",
     "model_expansion": "facebook/blenderbot-400M-distill",
     "token": "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"
 }
