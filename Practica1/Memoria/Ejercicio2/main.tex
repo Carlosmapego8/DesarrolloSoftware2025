@@ -1,0 +1,166 @@
+% Inicio del preámbulo
+
+\documentclass[letterpaper,12pt]{article} %Modifica el tipo de documento y el tamaño de la letra.
+
+\usepackage[utf8]{inputenc} %Formato UTF-8 para caracteres especiales.
+
+\usepackage[dvipsnames,table]{xcolor}
+
+\usepackage[shortlabels]{enumitem}
+\usepackage[spanish,mexico]{babel} 
+\usepackage{amsmath,amssymb,amsfonts,latexsym,cancel}
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage[rflt]{floatflt}
+\usepackage[pdftex]{graphicx}
+\usepackage{fancyhdr} %Paquete para el header y el formato de la portada. No sugiero borrarlo!
+\usepackage{float}
+\usepackage{longtable,multirow,booktabs}
+\usepackage{caption}
+\usepackage[]{sidecap}
+\usepackage{adjustbox}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{lipsum}
+\usepackage{wrapfig} %texto alrededor de Images \begin{wrapfigure}{alignment}{width}
+\usepackage{xlop}	%divisiones con caja \opidiv{316}{50}
+\newcommand\myrule[1]{\multicolumn{1}{| l}{#1}}
+\usepackage{multicol} %varias columnas
+\setlength{\parindent}{0pt}
+\usepackage{textcomp}   %poner símbolo copyright
+\usepackage{colortbl}
+
+% bibliografía
+\usepackage[nottoc]{tocbibind}
+\usepackage[square,numbers]{natbib}
+\bibliographystyle{apalike}
+
+
+% Para hacer recuadros
+% https://ondahostil.wordpress.com/2017/05/17/lo-que-he-aprendido-cuadros-de-texto-de-colores-en-latex/
+\usepackage{tcolorbox}
+\newtcolorbox{mybox}[1]
+{colback=RoyalBlue!5!white,colframe=RoyalBlue!75!black,fonttitle=\bfseries,title=#1}
+
+%%% Matemáticas Paquetes AMS
+\usepackage{amsfonts}
+\usepackage{amsmath} % Matemáticas
+\usepackage{amssymb,amsthm} % Símbolos y teoremas
+\usepackage{mathtools} % % Algunos añadidos y correcciones a amsmath
+\usepackage{upgreek} % Letras griegas
+\usepackage{esvect}
+\usepackage{dsfont} % Conjunto unario
+
+\numberwithin{equation}{section}
+\allowdisplaybreaks[1] % 1-4, permite partir ecuaciones entre páginas
+
+\DeclareMathOperator{\End}{End}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\rg}{rg}
+\DeclareMathOperator{\Rad}{Rad}
+\DeclareMathOperator{\nul}{nul}
+\DeclareMathOperator{\indice}{indice}
+\DeclareMathOperator{\Iso}{Iso}
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\Gl}{Gl}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\dist}{d}
+
+
+% teoremas
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{prop}{Proposición}[section]
+\newtheorem{coro}[teorema]{Corolario}
+\newtheorem{lema}[teorema]{Lema}
+\theoremstyle{definition}
+\newtheorem{definicion}[teorema]{Definición}
+\theoremstyle{remark}
+\newtheorem*{observacion}{Observación} 
+\theoremstyle{remark}
+\newtheorem*{ejemplos}{Ejemplos}
+\theoremstyle{remark}
+\newtheorem*{propiedades}{Propiedades}
+\theoremstyle{remark}
+\newtheorem*{propiedad}{Propiedad}
+
+
+\usepackage{multirow} % Tablas con casillas de varias alturas
+
+\definecolor{morado}{HTML}{791FCD}
+
+
+%Fin de Préambulo
+
+% Variables del documento
+% Document Variables 
+\newcommand{\myMateria}{Desarrollo de Software}
+\newcommand{\myDegree}{Grado en Informática}
+\newcommand{\mySemester}{2024-25}
+\newcommand{\myReport}{Práctica 1}
+\newcommand{\myName}{Cristóbal Merino Sáez, Carlos Manuel Perales Gómez,
+Adrián Jaén Fuentes, Kike}
+\newcommand{\myUnidad}{}
+\date{}
+
+
+
+%Inicio formato de Página. 
+
+\textheight = 21cm %Medidas de la  página
+\textwidth = 18cm  %Medidas de la página
+\topmargin = -2cm  %Medidas de la página    
+\oddsidemargin = -0.8cm %Medidas de la página
+\pagestyle{fancy} %Diseño de la página
+
+\fancyhf{}
+\lhead{\myMateria}%%LeftHead
+%%\chead{\includegraphics[ height=1cm]{Images/azalea.jpeg}}%%CenterHead
+%\lfoot{USM}
+\rhead{\myUnidad}%%RightHead
+
+\setlength{\columnsep}{4mm}%Comandos para el formato de la página.
+%\setlength{\parindent}{4em}%Sangría al comenzar un nuevo párrafo.
+%\setlength{\parindent}{0.5in}
+%\setlength{\parindent}{4em}%Sangría al comenzar un nuevo párrafo.
+\setlength{\parskip}{1em}%Distancia entre párrafos.
+\renewcommand{\baselinestretch}{1.0}% Espacio entre línea y línea o interlineado.
+\setlength{\headheight}{33pt}
+\fancyfoot[C,CO]{\thepage} %Logo de LaTeX y pie de página.
+
+%Fin formato de Página
+
+%Aquí inicia el documento.
+
+\begin{document}
+
+    %LaTeX te hace el índice automáticamente conforme añades secciones en tu documento.
+    \input{portada.tex}
+    \newpage
+    \tableofcontents
+    \newpage
+%Inicio parte opcional. Esta parte la puedes quitar si deseas, es por si te piden formatos para
+%evidencias de certificación de los laboratorios con números de cuenta o te piden abstracts en tus %trabajos.
+
+\title{\myMateria \\\textbf{\myReport} \\ } 
+
+\begin{abstract}
+\end{abstract}
+
+\input{contenido}
+
+% \newpage
+
+% \glsaddall
+% \printglossary
+
+% \newpage
+
+% \nocite{*}
+% \bibliography{Libros}
+
+\end{document}
+
+ %Fin del documento.
