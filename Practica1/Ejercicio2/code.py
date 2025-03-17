@@ -87,7 +87,7 @@ if __name__ == "__main__":
     INPUT_LANG = config["input_lang"]
     OUTPUT_LANG = config["output_lang"]
     MODEL_LLM = config["model_llm"]
-    MODEL_TRANSLATION = config["model_translation"]
+    MODEL_TRANSLATION = config["model_translation"].replace("input", INPUT_LANG).replace("output", OUTPUT_LANG)
     MODEL_EXPANSION = config["model_expansion"]
     API_TOKEN = config["token"]
 
