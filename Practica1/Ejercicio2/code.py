@@ -57,7 +57,7 @@ class TranslationDecorator(DecoratorLLM):
         summary = self._LLM.generate_summary(text, input_lang, output_lang, model)
         translation = client.translation(
             text = summary,
-            model = MODEL_TRANSLATION + input_lang + "-" + output_lang
+            model = MODEL_TRANSLATION
         )
 
         return translation.translation_text
@@ -69,8 +69,8 @@ class ExpansionDecorator(DecoratorLLM):
     def generate_summary(self, text: str, input_lang: str, output_lang: str, model: str) -> str:
         summary = self._LLM.generate_summary(text, input_lang, output_lang, model)
         expansion = client.text_generation(
-            prompt = summary,
-            model = MODEL_EXPANSION 
+            prompt = summary[:250],
+            model = MODEL_EXPANSION
         )
 
         return expansion
@@ -78,41 +78,41 @@ class ExpansionDecorator(DecoratorLLM):
 ###########################################################################################
 ## 4. Codigo cliente
 ###########################################################################################
+if __name__ == "__main__":
+    # Leer el archivo config.json
+    with open("config.json") as config_file:
+        config = json.load(config_file)
 
-# Leer el archivo config.json
-with open("config.json") as config_file:
-    config = json.load(config_file)
+    TEXTO = config["texto"]
+    INPUT_LANG = config["input_lang"]
+    OUTPUT_LANG = config["output_lang"]
+    MODEL_LLM = config["model_llm"]
+    MODEL_TRANSLATION = config["model_translation"]
+    MODEL_EXPANSION = config["model_expansion"]
+    API_TOKEN = config["token"]
 
-TEXTO = config["texto"]
-INPUT_LANG = config["input_lang"]
-OUTPUT_LANG = config["output_lang"]
-MODEL_LLM = config["model_llm"]
-MODEL_TRANSLATION = config["model_translation"]
-MODEL_EXPANSION = config["model_expansion"]
-API_TOKEN = config["token"]
+    client = InferenceClient(
+        provider="hf-inference",
+        api_key=API_TOKEN
+    )
 
-client = InferenceClient(
-	provider="hf-inference",
-	api_key=API_TOKEN
-)
-
-#LLamamos al resumen básico
+    #LLamamos al resumen básico
 
 
-LLM = BasicLLM()
-summary = LLM.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+    LLM = BasicLLM()
+    summary = LLM.generate_summary(TEXTO, "en", "es", MODEL_LLM)
 
-print("Resumen básico: " + summary)
+    print("Resumen básico: " + summary + "\n")
 
-translation_decorator = TranslationDecorator(LLM)
-translation = translation_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
-print("Resumen traducido: " + translation)
+    translation_decorator = TranslationDecorator(LLM)
+    translation = translation_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+    print("Resumen traducido: " + translation + "\n")
 
-expansion_decorator = ExpansionDecorator(LLM)
-expansion = expansion_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
-print("Expansión del resumen" + expansion)
+    expansion_decorator = ExpansionDecorator(LLM)
+    expansion = expansion_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+    print("Expansión del resumen: " + expansion + "\n")
 
-#Traducimos y expandimos
-double_decorator = ExpansionDecorator(TranslationDecorator(LLM))
-double_decoration = double_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
-print("Resumen traducido y expandido" + double_decoration)
+    #Traducimos y expandimos
+    double_decorator = ExpansionDecorator(TranslationDecorator(LLM))
+    double_decoration = double_decorator.generate_summary(TEXTO, "en", "es", MODEL_LLM)
+    print("Resumen expandido y traducido: " + double_decoration + "\n")
