@@ -24,9 +24,9 @@ class BeautifulSoupScraper(ScraperStrategy):
             return []
         
         soup = BeautifulSoup(response.text, "html.parser")
-        return self.extract_quotes(soup)
+        return self.extractQuotes(soup)
 
-    def extract_quotes(self, soup):
+    def extractQuotes(self, soup):
         quotes_data = []
         quotes = soup.find_all("div", class_="quote")
 
@@ -55,9 +55,9 @@ class SeleniumScraper(ScraperStrategy):
     def scrape(self, url):
         self.driver.get(url)
         time.sleep(1)  # Aseguramos cargar de la página
-        return self.extract_quotes()
+        return self.extractQuotes()
 
-    def extract_quotes(self):
+    def extractQuotes(self):
         quotes_data = []
         quotes = self.driver.find_elements(By.CLASS_NAME, "quote")
 
@@ -83,10 +83,10 @@ class ScraperContext:
     def __init__(self, strategy: ScraperStrategy):
         self.strategy = strategy
 
-    def set_strategy(self, strategy: ScraperStrategy):
+    def setStrategy(self, strategy: ScraperStrategy):
         self.strategy = strategy
 
-    def scrape_pages(self, base_url, num_pages=5):
+    def scrapePages(self, base_url, num_pages=5):
         all_quotes = []
         for page in range(1, num_pages + 1):
             url = f"{base_url}/page/{page}/"
@@ -97,7 +97,7 @@ class ScraperContext:
         return all_quotes
 
 # Guardar los datos en un archivo YAML
-def save_to_yaml(data, filename="quotes.yaml"):
+def saveToYaml(data, filename="quotes.yaml"):
     with open(filename, "w", encoding="utf-8") as file:
         yaml.dump(data, file, allow_unicode=True, default_flow_style=False)
     print(f"Datos guardados en {filename}")
@@ -105,6 +105,7 @@ def save_to_yaml(data, filename="quotes.yaml"):
 # Función principal con interacción del usuario
 def main():
     BASE_URL = "https://quotes.toscrape.com"
+    scraper = ScraperContext(BeautifulSoupScraper())
 
     while True:
         print("\nSelecciona el método de scraping:")
@@ -125,10 +126,10 @@ def main():
             continue
 
         scraper = ScraperContext(strategy)
-        quotes = scraper.scrape_pages(BASE_URL)
+        quotes = scraper.scrapePages(BASE_URL)
 
         # Guardar y mostrar los resultados
-        save_to_yaml(quotes)
+        saveToYaml(quotes)
         print("\nDatos extraídos:")
         for quote in quotes[:5]:  # Mostrar solo los primeros 5
             print(f"- {quote['text']} ({quote['author']})")
