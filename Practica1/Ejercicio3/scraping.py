@@ -4,11 +4,12 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from abc import ABC, abstractmethod
 import time
 
-# Definición del patrón Strategy
+# Patrón Strategy
 class ScraperStrategy(ABC):
     @abstractmethod
     def scrape(self, url):
@@ -46,25 +47,25 @@ class BeautifulSoupScraper(ScraperStrategy):
 class SeleniumScraper(ScraperStrategy):
     def __init__(self):
         options = Options()
-        options.add_argument("--headless")  # Ejecutar en modo sin interfaz gráfica
+        options.add_argument("--headless")  # Ejecutamos sin interfaz gráfica
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     def scrape(self, url):
         self.driver.get(url)
-        time.sleep(2)  # Espera para asegurar la carga de la página
-        soup = BeautifulSoup(self.driver.page_source, "html.parser")
-        return self.extract_quotes(soup)
+        time.sleep(1)  # Aseguramos cargar de la página
+        return self.extract_quotes()
 
-    def extract_quotes(self, soup):
+    def extract_quotes(self):
         quotes_data = []
-        quotes = soup.find_all("div", class_="quote")
+        quotes = self.driver.find_elements(By.CLASS_NAME, "quote")
 
         for quote in quotes:
-            text = quote.find("span", class_="text").text
-            author = quote.find("small", class_="author").text
-            tags = [tag.text for tag in quote.find_all("a", class_="tag")]
+            text = quote.find_element(By.CLASS_NAME, "text").text
+            author = quote.find_element(By.CLASS_NAME, "author").text
+            tag_elements = quote.find_elements(By.CLASS_NAME, "tag")
+            tags = [tag.text for tag in tag_elements]
 
             quotes_data.append({
                 "text": text,
