@@ -30,7 +30,7 @@ public abstract class Carrera implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(duracion * 1);
+            Thread.sleep(duracion * 1000);
             retirarBicicletas();
             System.out.println(getClass().getSimpleName() + " finalizada con " + bicicletas.size() + " bicicletas.");
         } catch (InterruptedException e) {
