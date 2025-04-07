@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import '../operations/operacion_factory.dart';
-import '../widgets/grafico_barras.dart';
+import 'factoria_operacion.dart';
+import 'grafico_barras.dart';
 
-class EstadisticaPage extends StatefulWidget {
+class PaginaSuscripciones extends StatefulWidget {
+  const PaginaSuscripciones({super.key});
+
   @override
-  _EstadisticaPageState createState() => _EstadisticaPageState();
+  _PaginaSuscripcionesState createState() => _PaginaSuscripcionesState();
 }
 
-class _EstadisticaPageState extends State<EstadisticaPage> {
+class _PaginaSuscripcionesState extends State<PaginaSuscripciones> {
   final TextEditingController _controller = TextEditingController();
   String _resultado = "";
   String _operacionSeleccionada = 'media';

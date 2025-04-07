@@ -1,9 +1,4 @@
-import '../models/operacion_estadistica.dart';
-import 'media.dart';
-import 'moda.dart';
-import 'mediana.dart';
-import 'varianza.dart';
-import 'desviacion_estandar.dart';
+import 'operacion_estadistica.dart';
 
 class OperacionEstadisticaFactory {
   static OperacionEstadistica crearOperacion(String tipo) {

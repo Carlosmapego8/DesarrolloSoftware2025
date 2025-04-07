@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/suscripcion.dart';
+import 'suscripcion.dart';
 
 class SuscripcionCard extends StatelessWidget {
   final Suscripcion suscripcion;

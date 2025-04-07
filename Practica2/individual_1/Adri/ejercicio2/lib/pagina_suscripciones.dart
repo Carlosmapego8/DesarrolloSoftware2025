@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/suscripcion.dart';
-import '../logic/gestor_suscripciones.dart';
-import '../widgets/tarjeta_suscripcion.dart';
+import 'suscripcion.dart';
+import 'gestor_suscripciones.dart';
+import 'tarjeta_suscripcion.dart';
 
-class SuscripcionesPage extends StatefulWidget {
+class PaginaSuscripciones extends StatefulWidget {
+  const PaginaSuscripciones({super.key});
+
   @override
-  _SuscripcionesPageState createState() => _SuscripcionesPageState();
+  _PaginaSuscripcionesState createState() => _PaginaSuscripcionesState();
 }
 
-class _SuscripcionesPageState extends State<SuscripcionesPage> {
+class _PaginaSuscripcionesState extends State<PaginaSuscripciones> {
   final GestorSuscripciones _gestor = GestorSuscripciones();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _precioController = TextEditingController();
@@ -17,7 +19,9 @@ class _SuscripcionesPageState extends State<SuscripcionesPage> {
     final desc = _descController.text.trim();
     final precio = double.tryParse(_precioController.text.trim());
 
-    if (desc.isNotEmpty && precio != null) {
+    final yaExiste = _gestor.suscripciones.any((s) => s.descripcion.toLowerCase() == desc.toLowerCase());
+
+    if (desc.isNotEmpty && precio != null && precio >= 0.01 && !yaExiste) {
       setState(() {
         _gestor.agregar(Suscripcion(descripcion: desc, precioMensual: precio));
         _descController.clear();

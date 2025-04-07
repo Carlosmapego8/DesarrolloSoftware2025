@@ -1,4 +1,4 @@
-import '../models/suscripcion.dart';
+import 'suscripcion.dart';
 
 class GestorSuscripciones {
   final List<Suscripcion> _suscripciones = [];
