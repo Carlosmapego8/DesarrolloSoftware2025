@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../filters/email_filter.dart';
 import '../filters/password_filter.dart';
+import '../filters/email_exists_filter.dart';
 import '../managers/filter_manager.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     filterManager.addFilter(EmailFilter());
+    filterManager.addFilter(EmailExistsFilter());
     filterManager.addFilter(PasswordFilter());
   }
 
@@ -29,11 +31,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final validationError = filterManager.executeFilters(email, password);
 
     if (validationError != null) {
-      setState(() => errorMessage = validationError);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(validationError),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        ),
+      );
       return;
     }
 
-    setState(() => errorMessage = '¡Autenticación exitosa!');
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Autenticación exitosa!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+    );
   }
 
   @override

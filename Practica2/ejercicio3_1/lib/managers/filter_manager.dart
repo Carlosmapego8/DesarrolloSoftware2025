@@ -1,3 +1,5 @@
+import 'package:ejercicio3_1/filters/email_exists_filter.dart';
+
 import '../filters/filter.dart';
 import '../filters/email_filter.dart';
 import '../filters/password_filter.dart';
@@ -16,6 +18,9 @@ class FilterManager {
         if (result != null) return result;
       } else if (filter is PasswordFilter) {
         final result = filter.execute(password);
+        if (result != null) return result;
+      } else if (filter is EmailExistsFilter) {
+        final result = filter.execute(email);
         if (result != null) return result;
       }
     }
