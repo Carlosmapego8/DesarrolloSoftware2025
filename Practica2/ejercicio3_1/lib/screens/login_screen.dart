@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void authenticate() {
     final email = emailController.text;
     final password = passwordController.text;
-    final validationError = filterManager.executeFilters(email, password);
+    final validationError = filterManager.validate(email, password);
 
 
     sendNotificaiton(validationError);
