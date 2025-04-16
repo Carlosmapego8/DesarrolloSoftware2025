@@ -3,6 +3,7 @@ import '../filters/email_filter.dart';
 import '../filters/password_filter.dart';
 import '../filters/email_exists_filter.dart';
 import '../managers/filter_manager.dart';
+import '../services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   String errorMessage = '';
   final FilterManager filterManager = FilterManager();
+  final NotificationService notificationService = NotificationService();
 
   @override
   void initState() {
@@ -25,30 +27,27 @@ class _LoginScreenState extends State<LoginScreen> {
     filterManager.addFilter(PasswordFilter());
   }
 
+  void sendNotificaiton(String? message) {
+    if (message != null) {
+      NotificationService.showCustomSnackbar(
+          message: message, backgroundColor: Colors.red);
+    }
+      else {
+      NotificationService.showCustomSnackbar(
+          message: '¡Autenticación exitosa!', duration: const Duration(seconds: 3), backgroundColor: Colors.green);
+    }
+  }
+
   void authenticate() {
     final email = emailController.text;
     final password = passwordController.text;
     final validationError = filterManager.executeFilters(email, password);
 
-    if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validationError),
-          backgroundColor: Colors.redAccent,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Autenticación exitosa!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-    );
+    sendNotificaiton(validationError);
+
   }
+
 
   @override
   Widget build(BuildContext context) {

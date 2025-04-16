@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_1/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_1/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_1/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_2/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_2/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ejercicio3_2/build" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio1/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio1/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio1/build" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio2/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio2/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/individual_1/Adri/ejercicio2/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
