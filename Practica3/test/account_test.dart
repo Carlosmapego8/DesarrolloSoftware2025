@@ -7,7 +7,19 @@ void main() {
       final account = Account('AC0', 'TEST');
       expect(account.balance, equals(0));
     });
+
+    test('No se permite depositar cantidades negativas o cero', () {
+      final account = Account('AC999', 'Cristobal');
+
+      expect(() => account.deposit(0), throwsArgumentError);
+      expect(() => account.deposit(-10), throwsArgumentError);
+    });
+
+    test('No se permite retirar cantidades negativas o cero', () {
+      final account = Account('AC100', 'Test')..deposit(100);
+
+      expect(() => account.withdraw(0), throwsArgumentError);
+      expect(() => account.withdraw(-20), throwsArgumentError);
+    });
   });
-
-
 }
