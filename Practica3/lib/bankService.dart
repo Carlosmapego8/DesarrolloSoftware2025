@@ -75,4 +75,6 @@ class BankService {
     }
     return account;
   }
+
+  Set<String> get transactionIds => _transactions.keys.toSet();
 }
