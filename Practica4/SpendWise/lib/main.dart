@@ -222,6 +222,10 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final total = transactions.fold(0.0, (sum, tx) {
+      return tx.type == TransactionType.income ? sum + tx.amount : sum - tx.amount;
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestión Finanzas Personales'),
@@ -239,6 +243,27 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
           children: [
             Text('Presupuesto límite: $currency${budgetLimit.toStringAsFixed(2)}'),
             const SizedBox(height: 10),
+            // 💰 Saldo actual
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              decoration: BoxDecoration(
+                color: total >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: total >= 0 ? Colors.green : Colors.red,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                'Tienes: $currency${total.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: total >= 0 ? Colors.green : Colors.red,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             DropdownButton<String>(
               value: currentStrategyName,
               onChanged: (value) {
@@ -251,15 +276,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 DropdownMenuItem(value: 'Por Categoría', child: Text('Por Categoría')),
                 DropdownMenuItem(value: 'Promedio', child: Text('Promedio')),
               ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              budgetExceeded ? '¡Presupuesto Excedido!' : 'Presupuesto dentro del límite',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: budgetExceeded ? Colors.red : Colors.green,
-                fontSize: 18,
-              ),
             ),
             const SizedBox(height: 20),
             const Text('Transacciones:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
