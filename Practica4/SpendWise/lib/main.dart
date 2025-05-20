@@ -39,7 +39,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
   double budgetLimit = 700.0;
   String currency = '\€';
-  bool notificationsEnabled = true;
 
   late BudgetStrategy currentStrategy;
   String currentStrategyName = 'Fijo';
@@ -177,7 +176,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   Future<void> openSettingsDialog() async {
     final budgetController = TextEditingController(text: budgetLimit.toString());
     final currencyController = TextEditingController(text: currency);
-    bool notifications = notificationsEnabled;
 
     await showDialog(
       context: context,
@@ -196,15 +194,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 controller: currencyController,
                 decoration: const InputDecoration(labelText: 'Moneda'),
               ),
-              Row(
-                children: [
-                  const Text('Notificaciones'),
-                  Switch(
-                    value: notifications,
-                    onChanged: (val) => setDialogState(() => notifications = val),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -215,7 +204,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               setState(() {
                 budgetLimit = double.tryParse(budgetController.text) ?? budgetLimit;
                 currency = currencyController.text.isNotEmpty ? currencyController.text : currency;
-                notificationsEnabled = notifications;
                 budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
               });
               Navigator.pop(context);
