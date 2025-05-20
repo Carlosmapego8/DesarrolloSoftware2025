@@ -1,16 +1,16 @@
 import '../models/transaction.dart';
 
 abstract class TransactionFactory {
-  Transaction createTransaction(double amount, String category);
+  Transaction createTransaction(double amount, String category, DateTime date);
 }
 
 class ExpenseFactory implements TransactionFactory {
   @override
-  Transaction createTransaction(double amount, String category) {
+  Transaction createTransaction(double amount, String category, DateTime date) {
     return Transaction(
       amount: amount,
       category: category,
-      date: DateTime.now(),
+      date: date,
       type: TransactionType.expense,
     );
   }
@@ -18,11 +18,11 @@ class ExpenseFactory implements TransactionFactory {
 
 class IncomeFactory implements TransactionFactory {
   @override
-  Transaction createTransaction(double amount, String category) {
+  Transaction createTransaction(double amount, String category, DateTime date) {
     return Transaction(
       amount: amount,
       category: category,
-      date: DateTime.now(),
+      date: date,
       type: TransactionType.income,
     );
   }

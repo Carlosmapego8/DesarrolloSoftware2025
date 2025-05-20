@@ -86,55 +86,93 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
     double? amount;
     String? category;
+    DateTime selectedDate = DateTime.now();
+
     final formKey = GlobalKey<FormState>();
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isExpense ? 'Añadir Gasto' : 'Añadir Ingreso'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Cantidad'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Ingresa una cantidad';
-                  if (double.tryParse(value) == null) return 'Cantidad no válida';
-                  return null;
-                },
-                onSaved: (value) => amount = double.tryParse(value!),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: Text(isExpense ? 'Añadir Gasto' : 'Añadir Ingreso'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Cantidad'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Ingresa una cantidad';
+                      if (double.tryParse(value) == null) return 'Cantidad no válida';
+                      return null;
+                    },
+                    onSaved: (value) => amount = double.tryParse(value!),
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Categoría'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Ingresa una categoría';
+                      return null;
+                    },
+                    onSaved: (value) => category = value,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Text('Fecha:'),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${selectedDate.toLocal()}'.split(' ')[0],
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null && picked != selectedDate) {
+                            setState(() {
+                              selectedDate = picked;
+                            });
+                          }
+                        },
+                        child: const Text('Cambiar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Categoría'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Ingresa una categoría';
-                  return null;
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    formKey.currentState!.save();
+                    final tx = factory.createTransaction(amount!, category!, selectedDate);
+                    addTransaction(tx);
+                    Navigator.pop(context);
+                  }
                 },
-                onSaved: (value) => category = value,
+                child: const Text('Agregar'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                formKey.currentState!.save();
-                final tx = factory.createTransaction(amount!, category!);
-                addTransaction(tx);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Agregar'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   Future<void> openSettingsDialog() async {
     final budgetController = TextEditingController(text: budgetLimit.toString());
