@@ -1,103 +1,10 @@
 import 'package:flutter/material.dart';
-
-// ------------------ Strategy -------------------
-
-abstract class BudgetStrategy {
-  bool isExceeded(double budgetLimit, List<Transaction> transactions);
-}
-
-class FixedBudgetStrategy implements BudgetStrategy {
-  @override
-  bool isExceeded(double budgetLimit, List<Transaction> transactions) {
-    double total = transactions.fold(0, (sum, t) => sum + (t.type == TransactionType.expense ? t.amount : -t.amount));
-    return total > budgetLimit;
-  }
-}
-
-class CategoryBudgetStrategy implements BudgetStrategy {
-  final Map<String, double> categoryLimits;
-
-  CategoryBudgetStrategy(this.categoryLimits);
-
-  @override
-  bool isExceeded(double budgetLimit, List<Transaction> transactions) {
-    Map<String, double> spentByCategory = {};
-    for (var t in transactions) {
-      if (t.type == TransactionType.expense) {
-        spentByCategory[t.category] = (spentByCategory[t.category] ?? 0) + t.amount;
-      }
-    }
-    for (var category in categoryLimits.keys) {
-      if ((spentByCategory[category] ?? 0) > categoryLimits[category]!) {
-        return true;
-      }
-    }
-    return false;
-  }
-}
-
-class AverageBasedStrategy implements BudgetStrategy {
-  final double averageLastMonths;
-
-  AverageBasedStrategy(this.averageLastMonths);
-
-  @override
-  bool isExceeded(double budgetLimit, List<Transaction> transactions) {
-    double total = transactions.fold(0, (sum, t) => sum + (t.type == TransactionType.expense ? t.amount : -t.amount));
-    double adjustedLimit = averageLastMonths * 1.1;
-    return total > adjustedLimit;
-  }
-}
-
-// ------------------ Modelo Transacción -------------------
-
-enum TransactionType { income, expense }
-
-class Transaction {
-  double amount;
-  String category;
-  DateTime date;
-  TransactionType type;
-
-  Transaction({
-    required this.amount,
-    required this.category,
-    required this.date,
-    required this.type,
-  });
-}
-
-// ------------------ Factory -------------------
-
-abstract class TransactionFactory {
-  Transaction createTransaction(double amount, String category);
-}
-
-class ExpenseFactory implements TransactionFactory {
-  @override
-  Transaction createTransaction(double amount, String category) {
-    return Transaction(
-      amount: amount,
-      category: category,
-      date: DateTime.now(),
-      type: TransactionType.expense,
-    );
-  }
-}
-
-class IncomeFactory implements TransactionFactory {
-  @override
-  Transaction createTransaction(double amount, String category) {
-    return Transaction(
-      amount: amount,
-      category: category,
-      date: DateTime.now(),
-      type: TransactionType.income,
-    );
-  }
-}
-
-// ------------------ Flutter App -------------------
+import 'models/transaction.dart';
+import 'strategy/budget_strategy.dart';
+import 'strategy/fixed_budget_strategy.dart';
+import 'strategy/category_budget_strategy.dart';
+import 'strategy/average_based_strategy.dart';
+import 'factory/transaction_factory.dart';
 
 void main() {
   runApp(const MyApp());
@@ -131,7 +38,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   ];
 
   double budgetLimit = 700.0;
-  String currency = '\$';
+  String currency = '\€';
   bool notificationsEnabled = true;
 
   late BudgetStrategy currentStrategy;
@@ -321,9 +228,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
             ),
             const SizedBox(height: 10),
             Text(
-              budgetExceeded
-                  ? '¡Presupuesto Excedido!'
-                  : 'Presupuesto dentro del límite',
+              budgetExceeded ? '¡Presupuesto Excedido!' : 'Presupuesto dentro del límite',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: budgetExceeded ? Colors.red : Colors.green,
@@ -338,10 +243,10 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 itemBuilder: (context, index) {
                   final t = transactions[index];
                   return ListTile(
-                    title: Text('${t.category} - ${formatAmount(t)}'),
+                    title: Text('${t.category}   ${formatAmount(t)}'),
                     subtitle: Text('${t.date.toLocal()}'.split(' ')[0]),
                     leading: Icon(
-                      t.type == TransactionType.expense ? Icons.arrow_upward : Icons.arrow_downward,
+                      t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,
                       color: t.type == TransactionType.expense ? Colors.red : Colors.green,
                     ),
                     trailing: IconButton(
