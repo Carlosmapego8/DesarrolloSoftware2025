@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/transaction.dart';
-import 'strategy/budget_strategy.dart';
-import 'strategy/fixed_budget_strategy.dart';
-import 'strategy/category_budget_strategy.dart';
-import 'strategy/average_based_strategy.dart';
+import 'budget_strategy.dart';
 import 'factory/transaction_factory.dart';
 
 void main() {
