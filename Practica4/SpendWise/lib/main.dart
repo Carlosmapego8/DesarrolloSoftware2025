@@ -30,11 +30,13 @@ class BudgetHomePage extends StatefulWidget {
 }
 
 class _BudgetHomePageState extends State<BudgetHomePage> {
+  final List<String> predefinedCategories = ['Comida', 'Transporte', 'Salario', 'Entretenimiento', 'Otros'];
+
   List<Transaction> transactions = [
-    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income),
-    Transaction(amount: 50.0, category: 'Comida', date: DateTime(2025, 5, 3), type: TransactionType.expense),
-    Transaction(amount: 100.0, category: 'Transporte', date: DateTime(2025, 5, 5), type: TransactionType.expense),
-    Transaction(amount: 200.0, category: 'Comida', date: DateTime(2025, 5, 10), type: TransactionType.expense),
+    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
+    Transaction(amount: 50.0, category: 'Comida', date: DateTime(2025, 5, 3), type: TransactionType.expense, name: 'Pizza'),
+    Transaction(amount: 100.0, category: 'Transporte', date: DateTime(2025, 5, 5), type: TransactionType.expense, name: 'Metro'),
+    Transaction(amount: 200.0, category: 'Comida', date: DateTime(2025, 5, 10), type: TransactionType.expense, name: 'Supermercado'),
   ];
 
   double budgetLimit = 700.0;
@@ -47,6 +49,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   double averageLastMonths = 600.0;
 
   bool budgetExceeded = false;
+  String selectedCategoryFilter = 'Comida';
 
   @override
   void initState() {
@@ -74,17 +77,50 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   }
 
   void addTransaction(Transaction transaction) {
+    // Primero actualizamos la lista
     setState(() {
       transactions.add(transaction);
-      budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
     });
+
+    // Recalculamos el presupuesto EXTERNO a setState
+    final exceeded = currentStrategy.isExceeded(budgetLimit, transactions);
+
+    setState(() {
+      budgetExceeded = exceeded;
+    });
+
+    // Mostrar pop-up si se excede
+    if (exceeded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('¡Presupuesto excedido!'),
+            content: Text(
+              currentStrategyName == 'Por Categoría'
+                  ? 'Has superado el límite de la categoría "${transaction.category}".'
+                  : 'Has superado el límite de tu presupuesto.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Entendido'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
   }
+
+
 
   Future<void> showAddTransactionDialog(bool isExpense) async {
     final factory = isExpense ? ExpenseFactory() : IncomeFactory();
 
     double? amount;
-    String? category;
+    String? category = predefinedCategories.first;
+    String? name;
     DateTime selectedDate = DateTime.now();
 
     final formKey = GlobalKey<FormState>();
@@ -110,13 +146,28 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                     },
                     onSaved: (value) => amount = double.tryParse(value!),
                   ),
-                  TextFormField(
+                  DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Categoría'),
+                    value: category,
+                    items: predefinedCategories
+                        .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        category = value!;
+                      });
+                    },
+                    onSaved: (value) {
+                      category = value;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Nombre o descripción'),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Ingresa una categoría';
+                      if (value == null || value.isEmpty) return 'Ingresa un nombre';
                       return null;
                     },
-                    onSaved: (value) => category = value,
+                    onSaved: (value) => name = value,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -158,7 +209,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 onPressed: () {
                   if (formKey.currentState!.validate()) {
                     formKey.currentState!.save();
-                    final tx = factory.createTransaction(amount!, category!, selectedDate);
+                    final tx = factory.createTransaction(amount!, category ?? 'Sin categoría', selectedDate, name!);
                     addTransaction(tx);
                     Navigator.pop(context);
                   }
@@ -172,28 +223,44 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
     );
   }
 
-
   Future<void> openSettingsDialog() async {
     final budgetController = TextEditingController(text: budgetLimit.toString());
     final currencyController = TextEditingController(text: currency);
+
+    Map<String, TextEditingController> categoryControllers = {};
+    predefinedCategories.forEach((cat) {
+      categoryControllers[cat] = TextEditingController(
+        text: categoryLimits[cat]?.toString() ?? '',
+      );
+    });
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Configuración'),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: budgetController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Presupuesto límite'),
+                decoration: const InputDecoration(labelText: 'Presupuesto límite general'),
               ),
               TextField(
                 controller: currencyController,
                 decoration: const InputDecoration(labelText: 'Moneda'),
               ),
+              const SizedBox(height: 16),
+              const Text('Límites por categoría:', style: TextStyle(fontWeight: FontWeight.bold)),
+              ...predefinedCategories.map((cat) => Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: TextField(
+                  controller: categoryControllers[cat],
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Límite para $cat'),
+                ),
+              )),
             ],
           ),
         ),
@@ -204,6 +271,20 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               setState(() {
                 budgetLimit = double.tryParse(budgetController.text) ?? budgetLimit;
                 currency = currencyController.text.isNotEmpty ? currencyController.text : currency;
+
+                // Guardar límites por categoría
+                for (var cat in predefinedCategories) {
+                  final val = double.tryParse(categoryControllers[cat]!.text);
+                  if (val != null) {
+                    categoryLimits[cat] = val;
+                  }
+                }
+
+                // Recalcular estrategia si es por categoría
+                if (currentStrategyName == 'Por Categoría') {
+                  currentStrategy = CategoryBudgetStrategy(categoryLimits);
+                }
+
                 budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
               });
               Navigator.pop(context);
@@ -215,6 +296,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
     );
   }
 
+
   String formatAmount(Transaction t) {
     String sign = t.type == TransactionType.expense ? '-' : '+';
     return '$sign$currency${t.amount.toStringAsFixed(2)}';
@@ -222,7 +304,11 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final total = transactions.fold(0.0, (sum, tx) {
+    final filteredTransactions = currentStrategyName == 'Por Categoría'
+        ? transactions.where((tx) => tx.category == selectedCategoryFilter).toList()
+        : transactions;
+
+    final total = filteredTransactions.fold(0.0, (sum, tx) {
       return tx.type == TransactionType.income ? sum + tx.amount : sum - tx.amount;
     });
 
@@ -241,9 +327,17 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text('Presupuesto límite: $currency${budgetLimit.toStringAsFixed(2)}'),
+            Text(
+              'Presupuesto límite: $currency${(
+                  currentStrategyName == 'Por Categoría'
+                      ? (categoryLimits[selectedCategoryFilter] ?? 0.0)
+                      : currentStrategyName == 'Promedio'
+                      ? averageLastMonths
+                      : budgetLimit
+              ).toStringAsFixed(2)}',
+            ),
+
             const SizedBox(height: 10),
-            // 💰 Saldo actual
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               decoration: BoxDecoration(
@@ -277,16 +371,32 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 DropdownMenuItem(value: 'Promedio', child: Text('Promedio')),
               ],
             ),
+            if (currentStrategyName == 'Por Categoría') ...[
+              const SizedBox(height: 10),
+              DropdownButton<String>(
+                value: selectedCategoryFilter,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedCategoryFilter = value;
+                    });
+                  }
+                },
+                items: predefinedCategories
+                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
+              ),
+            ],
             const SizedBox(height: 20),
             const Text('Transacciones:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Expanded(
               child: ListView.builder(
-                itemCount: transactions.length,
+                itemCount: filteredTransactions.length,
                 itemBuilder: (context, index) {
-                  final t = transactions[index];
+                  final t = filteredTransactions[index];
                   return ListTile(
-                    title: Text('${t.category}   ${formatAmount(t)}'),
-                    subtitle: Text('${t.date.toLocal()}'.split(' ')[0]),
+                    title: Text('${t.name} - ${formatAmount(t)}'),
+                    subtitle: Text('${t.category} | ${t.date.toLocal()}'.split(' ')[0]),
                     leading: Icon(
                       t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,
                       color: t.type == TransactionType.expense ? Colors.red : Colors.green,
@@ -295,7 +405,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                       icon: const Icon(Icons.delete, color: Colors.grey),
                       onPressed: () {
                         setState(() {
-                          transactions.removeAt(index);
+                          transactions.remove(t);
                           budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
                         });
                       },
