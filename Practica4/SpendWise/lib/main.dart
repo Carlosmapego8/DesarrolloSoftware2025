@@ -347,6 +347,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               ),
               child: Text(
                 'Tienes: $currency${total.toStringAsFixed(2)}',
+                'Tienes: ${currencyService.convertToCurrent(total, signed: total < 0)}',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -392,7 +393,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 itemBuilder: (context, index) {
                   final t = filteredTransactions[index];
                   return ListTile(
-                    title: Text('${t.name} - ${formatAmount(t)}'),
+                    title: Text('${t.name} | ${formatAmount(t)}'),
                     subtitle: Text('${t.category} | ${t.date.toLocal()}'.split(' ')[0]),
                     leading: Icon(
                       t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,

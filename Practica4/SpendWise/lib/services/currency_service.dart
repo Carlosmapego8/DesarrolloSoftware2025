@@ -11,8 +11,12 @@ class CurrencyService {
 
   /// Cambia la moneda actual a partir de un valor de entrada (label o símbolo).
   /// [input] es un String como "USD (\$)".
-  void setCurrency(String input) {
     _current = CurrencyTypeExtension.fromInput(input);
+  }
+
+  /// Cambia la moneda actual a partir de un tipo de moneda.
+  void setCurrencyType(CurrencyType type) {
+    _current = type;
   }
 
   /// Convierte una cantidad (en EUR) a la moneda actual.
@@ -25,6 +29,11 @@ class CurrencyService {
     return '$prefix${_current.symbol}${converted.abs().toStringAsFixed(2)}';
   }
 
+  /// Convierte una cantidad de una moneda a otra.
+  /// [amount] es la cantidad en la moneda de origen.
+  /// [from] es la moneda de origen, [to] es la moneda destino.
+    double amountInEur = amount / from.conversionFactor;
+    return amountInEur * to.conversionFactor;
   /// Devuelve el tipo de moneda actualmente seleccionado.
   CurrencyType get currentCurrencyType => _current;
 
