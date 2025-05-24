@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'models/transaction.dart';
 import 'budget_strategy.dart';
 import 'factory/transaction_factory.dart';
+import 'services/currency_service.dart';
+import 'services/notification_service.dart';
+import 'models/currency_type.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +31,9 @@ class BudgetHomePage extends StatefulWidget {
 
 class _BudgetHomePageState extends State<BudgetHomePage> {
   final List<String> predefinedCategories = ['Comida', 'Transporte', 'Salario', 'Entretenimiento', 'Otros'];
+  final CurrencyService currencyService = CurrencyService();
+  final NotificationService notificationService = NotificationService();
+
 
   List<Transaction> transactions = [
     Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
@@ -37,7 +43,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   ];
 
   double budgetLimit = 700.0;
-  String currency = '\€';
+  //String currency = '\€'; // Eliminar
 
   late BudgetStrategy currentStrategy;
   String currentStrategyName = 'Fijo';
@@ -222,7 +228,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
   Future<void> openSettingsDialog() async {
     final budgetController = TextEditingController(text: budgetLimit.toString());
-    final currencyController = TextEditingController(text: currency);
+    // final currencyController = TextEditingController(text: currency); // eliminar
 
     Map<String, TextEditingController> categoryControllers = {};
     predefinedCategories.forEach((cat) {
@@ -239,15 +245,31 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              DropdownButton<String>(
+                value: currencyService.currentCurrencyType.label,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      currencyService.setCurrencyString(value);
+                    });
+                  }
+                },
+                items: currencyService.getAllCurrencyLabels()
+                    .map((label) => DropdownMenuItem(
+                  value: label,
+                  child: Text(label),
+                ))
+                    .toList(),
+              ),
               TextField(
                 controller: budgetController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Presupuesto límite general'),
               ),
-              TextField(
-                controller: currencyController,
-                decoration: const InputDecoration(labelText: 'Moneda'),
-              ),
+              // TextField(
+              //   controller: currencyController,
+              //   decoration: const InputDecoration(labelText: 'Moneda'),
+              // ),
               const SizedBox(height: 16),
               const Text('Límites por categoría:', style: TextStyle(fontWeight: FontWeight.bold)),
               ...predefinedCategories.map((cat) => Padding(
@@ -267,7 +289,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
             onPressed: () {
               setState(() {
                 budgetLimit = double.tryParse(budgetController.text) ?? budgetLimit;
-                currency = currencyController.text.isNotEmpty ? currencyController.text : currency;
+                //currency = currencyController.text.isNotEmpty ? currencyController.text : currency; // eliminar
 
                 // Guardar límites por categoría
                 for (var cat in predefinedCategories) {
@@ -295,8 +317,10 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
 
   String formatAmount(Transaction t) {
-    String sign = t.type == TransactionType.expense ? '-' : '+';
-    return '$sign$currency${t.amount.toStringAsFixed(2)}';
+    //String sign = t.type == TransactionType.expense ? '-' : '+'; // eliminar
+    //return '$sign$currency${t.amount.toStringAsFixed(2)}';
+    bool signed = t.type == TransactionType.expense ;
+    return currencyService.convertToCurrent(t.amount, signed: signed);
   }
 
   @override
@@ -325,14 +349,13 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
         child: Column(
           children: [
             Text(
-              'Presupuesto límite: $currency${(
+              'Presupuesto límite: ${currencyService.convertToCurrent(
                   currentStrategyName == 'Por Categoría'
                       ? (categoryLimits[selectedCategoryFilter] ?? 0.0)
                       : currentStrategyName == 'Promedio'
                       ? averageLastMonths
                       : budgetLimit
-              ).toStringAsFixed(2)}',
-            ),
+              )}',            ),
 
             const SizedBox(height: 10),
             Container(
@@ -346,7 +369,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 ),
               ),
               child: Text(
-                'Tienes: $currency${total.toStringAsFixed(2)}',
                 'Tienes: ${currencyService.convertToCurrent(total, signed: total < 0)}',
                 style: TextStyle(
                   fontSize: 20,
