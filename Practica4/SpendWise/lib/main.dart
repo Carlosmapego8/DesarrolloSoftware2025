@@ -46,7 +46,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   ];
 
   double budgetLimit = 700.0;
-  //String currency = '\€'; // Eliminar
+  late CurrencyType currency ;
 
   late BudgetStrategy currentStrategy;
   String currentStrategyName = 'Fijo';
@@ -62,6 +62,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
     super.initState();
     currentStrategy = FixedBudgetStrategy();
     budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
+    currency = currencyService.currentCurrencyType;
   }
 
   void changeStrategy(String strategyName) {
@@ -250,10 +251,11 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButton<String>(
-                value: currencyService.currentCurrencyType.label,
+                value: currency.label,
                 onChanged: (value) {
                   if (value != null) {
                     setState(() {
+                      currency = CurrencyTypeExtension.fromInput(value);
                       currencyService.setCurrencyString(value);
                     });
                   }
@@ -324,7 +326,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
     //String sign = t.type == TransactionType.expense ? '-' : '+'; // eliminar
     //return '$sign$currency${t.amount.toStringAsFixed(2)}';
     bool signed = t.type == TransactionType.expense ;
-    return currencyService.convertToCurrent(t.amount, signed: signed);
+    return currencyService.formatCurrentCurrency(currencyService.convertToCurrent(t.amount), signed: signed);
   }
 
   @override
@@ -362,7 +364,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
         child: Column(
           children: [
             Text(
-              'Presupuesto límite: ${currencyService.convertToCurrent(
+              'Presupuesto límite: ${currencyService.formatCurrentCurrency(
                   currentStrategyName == 'Por Categoría'
                       ? (categoryLimits[selectedCategoryFilter] ?? 0.0)
                       : currentStrategyName == 'Promedio'
@@ -382,7 +384,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                 ),
               ),
               child: Text(
-                'Tienes: ${currencyService.convertToCurrent(total, signed: total < 0)}',
+                'Tienes: ${currencyService.formatCurrentCurrency(currencyService.convertToCurrent(total), signed: total < 0)}',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
