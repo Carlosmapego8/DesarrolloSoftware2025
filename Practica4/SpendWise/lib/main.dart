@@ -451,6 +451,45 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               ),
             ],
             const SizedBox(height: 20),
+            if (currentStrategyName == 'Por Categoría') ...[
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Resumen por categorías:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Column(
+                children: predefinedCategories.map((category) {
+                  final categoryTotal = transactions
+                      .where((t) => t.category == category)
+                      .fold(0.0, (sum, t) {
+                    return t.type == TransactionType.income
+                        ? sum + t.amount
+                        : sum - t.amount;
+                  });
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(category),
+                      Text(
+                        currencyService.formatCurrentCurrency(
+                          currencyService.convertToCurrent(categoryTotal),
+                          signed: categoryTotal < 0,
+                        ),
+                        style: TextStyle(
+                          color: categoryTotal < 0 ? Colors.red : Colors.green,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+            ],
             const Align(
               alignment: Alignment.centerLeft,
               child: Text('Transacciones:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
