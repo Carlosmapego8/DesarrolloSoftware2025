@@ -462,7 +462,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                               transactions.removeWhere((tx) => tx.id == id);
                               budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
                             });
-                            api.deleteTransaction(int.parse(id)).catchError((_) {
+                            api.deleteTransaction(id).catchError((_) {
                               // Si falla, puedes volver a agregar la transacción o mostrar un error
                               // setState(() => transactions.add(t));
                               ScaffoldMessenger.of(context).showSnackBar(

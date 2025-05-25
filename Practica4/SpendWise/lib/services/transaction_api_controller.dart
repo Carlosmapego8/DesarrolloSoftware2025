@@ -13,7 +13,6 @@ class TransactionApiController {
   // Cargar todas las transacciones al inicio
   Future<void> fetchTransactions() async {
     final response = await http.get(Uri.parse(baseUrl));
-    print('Respuesta backend: ${response.body}');
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       transactions = data.map((e) => Transaction.fromJson(e)).toList();
@@ -39,7 +38,7 @@ class TransactionApiController {
   }
 
   // Actualizar una transacción existente
-  Future<void> updateTransaction(int id, Transaction tx) async {
+  Future<void> updateTransaction(String id, Transaction tx) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/$id'),
       headers: {'Content-Type': 'application/json'},
@@ -56,7 +55,7 @@ class TransactionApiController {
   }
 
   // Eliminar una transacción
-  Future<void> deleteTransaction(int id) async {
+  Future<void> deleteTransaction(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/$id'));
     if (response.statusCode == 200 || response.statusCode == 204) {
       transactions.removeWhere((t) => t.id == id);
