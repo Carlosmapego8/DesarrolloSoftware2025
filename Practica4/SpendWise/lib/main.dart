@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spendwise/services/transaction_api_controller.dart';
 import 'models/transaction.dart';
 import 'budget_strategy.dart';
 import 'factory/transaction_factory.dart';
@@ -33,17 +34,18 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   final CurrencyService currencyService = CurrencyService();
 
 
-  List<Transaction> transactions = [
-    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo'),
-    Transaction(amount: 50.0, category: 'Comida', date: DateTime(2025, 5, 3), type: TransactionType.expense, name: 'Pizza'),
-    Transaction(amount: 100.0, category: 'Transporte', date: DateTime(2025, 5, 5), type: TransactionType.expense, name: 'Metro'),
-    Transaction(amount: 200.0, category: 'Comida', date: DateTime(2025, 5, 10), type: TransactionType.expense, name: 'Supermercado'),
-    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 5, 2), type: TransactionType.expense, name: 'Gimnasio'),
-    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 4, 2), type: TransactionType.expense, name: 'Gimnasio'),
-    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 4, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
-    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 3, 2), type: TransactionType.expense, name: 'Gimnasio'),
-    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 3, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
-  ];
+  // List<Transaction> transactions = [
+  //   Transaction(id: '1', amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo'),
+  //   Transaction(id: '2', amount: 50.0, category: 'Comida', date: DateTime(2025, 5, 3), type: TransactionType.expense, name: 'Pizza'),
+  //   Transaction(id: '3', amount: 100.0, category: 'Transporte', date: DateTime(2025, 5, 5), type: TransactionType.expense, name: 'Metro'),
+  //   Transaction(id: '4', amount: 200.0, category: 'Comida', date: DateTime(2025, 5, 10), type: TransactionType.expense, name: 'Supermercado'),
+  //   Transaction(id: '5', amount: 25.0, category: 'Otro', date: DateTime(2025, 5, 2), type: TransactionType.expense, name: 'Gimnasio'),
+  //   Transaction(id: '6', amount: 25.0, category: 'Otro', date: DateTime(2025, 4, 2), type: TransactionType.expense, name: 'Gimnasio'),
+  //   Transaction(id: '7', amount: 500.0, category: 'Salario', date: DateTime(2025, 4, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
+  //   Transaction(id: '8', amount: 25.0, category: 'Otro', date: DateTime(2025, 3, 2), type: TransactionType.expense, name: 'Gimnasio'),
+  //   Transaction(id: '9', amount: 500.0, category: 'Salario', date: DateTime(2025, 3, 1), type: TransactionType.income, name: 'Sueldo Mayo'),  ];
+
+  List<Transaction> transactions = [];
 
   double budgetLimit = 700.0;
   late CurrencyType currency ;
@@ -57,12 +59,19 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   bool budgetExceeded = false;
   String selectedCategoryFilter = 'Comida';
 
+  final api = TransactionApiController();
+
   @override
   void initState() {
     super.initState();
     currentStrategy = FixedBudgetStrategy();
     budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
     currency = currencyService.currentCurrencyType;
+    api.fetchTransactions().then((_) {
+      setState(() {
+        transactions = api.transactions;
+      });
+    });
   }
 
   void changeStrategy(String strategyName) {
@@ -84,9 +93,10 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   }
 
   void addTransaction(Transaction transaction) {
-    // Primero actualizamos la lista
-    setState(() {
-      transactions.add(transaction);
+    api.createTransaction(transaction).then((_) {
+      setState(() {
+        transactions = api.transactions;
+      });
     });
 
     // Recalculamos el presupuesto EXTERNO a setState
@@ -447,9 +457,17 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.grey),
                           onPressed: () {
+                            final id = t.id;
                             setState(() {
-                              transactions.remove(t);
+                              transactions.removeWhere((tx) => tx.id == id);
                               budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
+                            });
+                            api.deleteTransaction(int.parse(id)).catchError((_) {
+                              // Si falla, puedes volver a agregar la transacción o mostrar un error
+                              // setState(() => transactions.add(t));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Error al eliminar transacción')),
+                              );
                             });
                           },
                           tooltip: 'Eliminar transacción',
