@@ -32,7 +32,6 @@ class BudgetHomePage extends StatefulWidget {
 class _BudgetHomePageState extends State<BudgetHomePage> {
   final List<String> predefinedCategories = ['Comida', 'Transporte', 'Salario', 'Entretenimiento', 'Otros'];
   final CurrencyService currencyService = CurrencyService();
-  final NotificationService notificationService = NotificationService();
 
 
   List<Transaction> transactions = [
