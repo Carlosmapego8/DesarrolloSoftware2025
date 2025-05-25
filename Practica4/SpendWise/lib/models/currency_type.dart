@@ -8,14 +8,11 @@ extension CurrencyTypeExtension on CurrencyType {
   static CurrencyType fromInput(String input) {
     final cleaned = input.toUpperCase().replaceAll(RegExp(r'[()]'), '').trim();
     switch (cleaned) {
-      case 'EUR':
-      case '€':
+      case 'EUR€':
         return CurrencyType.EUR;
-      case 'USD':
-      case '\$':
+      case 'USD\$':
         return CurrencyType.USD;
-      case 'GBP':
-      case '£':
+      case 'GBP£':
         return CurrencyType.GBP;
       default:
         throw ArgumentError('Moneda no válida: $input');

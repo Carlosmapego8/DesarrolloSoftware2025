@@ -14,9 +14,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Gestión Finanzas Personales',
-      home: BudgetHomePage(),
+    return MaterialApp(
+      title: 'SpendWise',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.indigo,
+          foregroundColor: Colors.white,
+          titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+      ),
+      home: const BudgetHomePage(),
     );
   }
 }
@@ -31,7 +43,6 @@ class BudgetHomePage extends StatefulWidget {
 class _BudgetHomePageState extends State<BudgetHomePage> {
   final List<String> predefinedCategories = ['Comida', 'Transporte', 'Salario', 'Entretenimiento', 'Otros'];
   final CurrencyService currencyService = CurrencyService();
-
 
   List<Transaction> transactions = [
     Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo'),
@@ -319,12 +330,19 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
     );
   }
 
-
   String formatAmount(Transaction t) {
     //String sign = t.type == TransactionType.expense ? '-' : '+'; // eliminar
     //return '$sign$currency${t.amount.toStringAsFixed(2)}';
     bool signed = t.type == TransactionType.expense ;
     return currencyService.convertToCurrent(t.amount, signed: signed);
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return months[month - 1];
   }
 
   @override
@@ -348,7 +366,16 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestión Finanzas Personales'),
+        title: const Text(
+          'SpendWise',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1.2,
+          ),
+        ),
+        backgroundColor: Colors.indigo,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -369,24 +396,25 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                       ? averageLastMonths
                       : budgetLimit
               )}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               decoration: BoxDecoration(
                 color: total >= 0 ? Colors.green.shade50 : Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: total >= 0 ? Colors.green : Colors.red,
-                  width: 1.5,
+                  width: 2,
                 ),
               ),
               child: Text(
                 'Tienes: ${currencyService.convertToCurrent(total, signed: total < 0)}',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: total >= 0 ? Colors.green : Colors.red,
+                  color: total >= 0 ? Colors.green.shade800 : Colors.red.shade800,
                 ),
               ),
             ),
@@ -421,16 +449,22 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               ),
             ],
             const SizedBox(height: 20),
-            const Text('Transacciones:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Transacciones:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 8),
             Expanded(
               child: ListView(
                 children: sortedMonthKeys.map((monthKey) {
                   final monthTransactions = transactionsByMonth[monthKey]!;
                   monthTransactions.sort((a, b) => b.date.compareTo(a.date));
-                  final monthName = '${DateTime.parse('$monthKey-01').month.toString().padLeft(2, '0')}/${DateTime.parse('$monthKey-01').year}';
+                  final monthDate = DateTime.parse('$monthKey-01');
+                  final monthName = '${_getMonthName(monthDate.month)} ${monthDate.year}';
+
                   return ExpansionTile(
                     title: Text(
-                      'Mes: $monthName',
+                      monthName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     children: monthTransactions.map((t) {
