@@ -36,10 +36,15 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
 
   List<Transaction> transactions = [
-    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
+    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 5, 1), type: TransactionType.income, name: 'Sueldo'),
     Transaction(amount: 50.0, category: 'Comida', date: DateTime(2025, 5, 3), type: TransactionType.expense, name: 'Pizza'),
     Transaction(amount: 100.0, category: 'Transporte', date: DateTime(2025, 5, 5), type: TransactionType.expense, name: 'Metro'),
     Transaction(amount: 200.0, category: 'Comida', date: DateTime(2025, 5, 10), type: TransactionType.expense, name: 'Supermercado'),
+    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 5, 2), type: TransactionType.expense, name: 'Gimnasio'),
+    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 4, 2), type: TransactionType.expense, name: 'Gimnasio'),
+    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 4, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
+    Transaction(amount: 25.0, category: 'Otro', date: DateTime(2025, 3, 2), type: TransactionType.expense, name: 'Gimnasio'),
+    Transaction(amount: 500.0, category: 'Salario', date: DateTime(2025, 3, 1), type: TransactionType.income, name: 'Sueldo Mayo'),
   ];
 
   double budgetLimit = 700.0;
@@ -48,7 +53,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   late BudgetStrategy currentStrategy;
   String currentStrategyName = 'Fijo';
 
-  Map<String, double> categoryLimits = {'Comida': 220.0, 'Transporte': 150.0};
+  Map<String, double> categoryLimits = {'Salario': -500, 'Comida': 220.0, 'Transporte': 150.0, 'Entretenimiento': 100, 'Otros': 50};
   double averageLastMonths = 600.0;
 
   bool budgetExceeded = false;
@@ -145,6 +150,7 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Ingresa una cantidad';
                       if (double.tryParse(value) == null) return 'Cantidad no válida';
+                      if (double.tryParse(value) !<= 0) return 'Cantidad no válida';
                       return null;
                     },
                     onSaved: (value) => amount = double.tryParse(value!),
@@ -333,6 +339,15 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
       return tx.type == TransactionType.income ? sum + tx.amount : sum - tx.amount;
     });
 
+    final transactionsByMonth = <String, List<Transaction>>{};
+    for (final tx in filteredTransactions) {
+      final monthKey = '${tx.date.year}-${tx.date.month.toString().padLeft(2, '0')}';
+      transactionsByMonth.putIfAbsent(monthKey, () => []).add(tx);
+    }
+
+    final sortedMonthKeys = transactionsByMonth.keys.toList()
+      ..sort((a, b) => b.compareTo(a)); // más recientes primero
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestión Finanzas Personales'),
@@ -355,8 +370,8 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                       : currentStrategyName == 'Promedio'
                       ? averageLastMonths
                       : budgetLimit
-              )}',            ),
-
+              )}',
+            ),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
@@ -410,29 +425,39 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
             const SizedBox(height: 20),
             const Text('Transacciones:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Expanded(
-              child: ListView.builder(
-                itemCount: filteredTransactions.length,
-                itemBuilder: (context, index) {
-                  final t = filteredTransactions[index];
-                  return ListTile(
-                    title: Text('${t.name} | ${formatAmount(t)}'),
-                    subtitle: Text('${t.category} | ${t.date.toLocal()}'.split(' ')[0]),
-                    leading: Icon(
-                      t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,
-                      color: t.type == TransactionType.expense ? Colors.red : Colors.green,
+              child: ListView(
+                children: sortedMonthKeys.map((monthKey) {
+                  final monthTransactions = transactionsByMonth[monthKey]!;
+                  monthTransactions.sort((a, b) => b.date.compareTo(a.date));
+                  final monthName = '${DateTime.parse('$monthKey-01').month.toString().padLeft(2, '0')}/${DateTime.parse('$monthKey-01').year}';
+                  return ExpansionTile(
+                    title: Text(
+                      'Mes: $monthName',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.grey),
-                      onPressed: () {
-                        setState(() {
-                          transactions.remove(t);
-                          budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
-                        });
-                      },
-                      tooltip: 'Eliminar transacción',
-                    ),
+                    children: monthTransactions.map((t) {
+                      final formattedDate = '${t.date.day.toString().padLeft(2, '0')}/${t.date.month.toString().padLeft(2, '0')}/${t.date.year}';
+                      return ListTile(
+                        title: Text('${t.name} | ${formatAmount(t)}'),
+                        subtitle: Text('${t.category} | $formattedDate'),
+                        leading: Icon(
+                          t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,
+                          color: t.type == TransactionType.expense ? Colors.red : Colors.green,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              transactions.remove(t);
+                              budgetExceeded = currentStrategy.isExceeded(budgetLimit, transactions);
+                            });
+                          },
+                          tooltip: 'Eliminar transacción',
+                        ),
+                      );
+                    }).toList(),
                   );
-                },
+                }).toList(),
               ),
             ),
           ],
