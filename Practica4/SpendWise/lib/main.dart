@@ -3,7 +3,6 @@ import 'models/transaction.dart';
 import 'budget_strategy.dart';
 import 'factory/transaction_factory.dart';
 import 'services/currency_service.dart';
-import 'services/notification_service.dart';
 import 'models/currency_type.dart';
 
 void main() {
@@ -32,7 +31,6 @@ class BudgetHomePage extends StatefulWidget {
 class _BudgetHomePageState extends State<BudgetHomePage> {
   final List<String> predefinedCategories = ['Comida', 'Transporte', 'Salario', 'Entretenimiento', 'Otros'];
   final CurrencyService currencyService = CurrencyService();
-  final NotificationService notificationService = NotificationService();
 
 
   List<Transaction> transactions = [
