@@ -5,6 +5,7 @@ import 'factory/transaction_factory.dart';
 import 'services/currency_service.dart';
 import 'models/currency_type.dart';
 import 'services/transaction_api_controller.dart';
+import 'widgets/edit_categories_dialog.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Gestión Finanzas Personales',
+      debugShowCheckedModeBanner: false, // Oculta la etiqueta DEBUG
       home: BudgetHomePage(),
     );
   }
@@ -162,8 +164,16 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
                       if (double.tryParse(value) !<= 0) return 'Cantidad no válida';
                       return null;
                     },
-                    onSaved: (value) => amount = double.tryParse(value!),
-                  ),
+                    onSaved: (value) {
+                      final input = double.tryParse(value!);
+                      if (input != null) {
+                        amount = currencyService.convertFromTo(
+                          input,
+                          currencyService.currentCurrencyType,
+                          CurrencyType.EUR,
+                        );
+                      }
+                    },                  ),
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Categoría'),
                     value: category,
@@ -242,16 +252,19 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
   }
 
   Future<void> openSettingsDialog() async {
-    final budgetController = TextEditingController(text: budgetLimit.toString());
-    // final currencyController = TextEditingController(text: currency); // eliminar
+    final budgetController = TextEditingController(
+          text: currencyService.convertToCurrent(budgetLimit).toStringAsFixed(2),
+    );
 
+    // Al crear los controladores, muestra el valor convertido a la moneda actual
     Map<String, TextEditingController> categoryControllers = {};
     predefinedCategories.forEach((cat) {
+      final limiteEnEuros = categoryLimits[cat] ?? 0.0;
+      final limiteEnMonedaActual = currencyService.convertToCurrent(limiteEnEuros);
       categoryControllers[cat] = TextEditingController(
-        text: categoryLimits[cat]?.toString() ?? '',
+        text: limiteEnMonedaActual.toStringAsFixed(2),
       );
     });
-
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -262,13 +275,15 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
             children: [
               DropdownButton<String>(
                 value: currency.label,
-                onChanged: (value) {
+                onChanged: (value) async{
                   if (value != null) {
                     setState(() {
                       currency = CurrencyTypeExtension.fromInput(value);
                       currencyService.setCurrencyString(value);
                     });
                   }
+                  Navigator.pop(context);
+                  await openSettingsDialog();
                 },
                 items: currencyService.getAllCurrencyLabels()
                     .map((label) => DropdownMenuItem(
@@ -288,6 +303,34 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
               // ),
               const SizedBox(height: 16),
               const Text('Límites por categoría:', style: TextStyle(fontWeight: FontWeight.bold)),
+              ElevatedButton(
+                onPressed: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (context) => EditCategoriesDialog(
+                      categories: predefinedCategories,
+                      onCategoriesChanged: (newCategories)  {
+                        setState(() {
+                          predefinedCategories
+                            ..clear()
+                            ..addAll(newCategories);
+                          categoryControllers = {
+                            for (var cat in predefinedCategories)
+                              cat: TextEditingController(
+                                text: currencyService.convertToCurrent(categoryLimits[cat] ?? 0.0).toStringAsFixed(2),
+                              )
+                          };
+                        });
+                        setState(() async{
+                          Navigator.pop(context);
+                          await openSettingsDialog();
+                        });
+                      },
+                    ),
+                  );
+                },
+                child: const Text('Editar categorías'),
+              ),
               ...predefinedCategories.map((cat) => Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: TextField(
@@ -304,14 +347,23 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                budgetLimit = double.tryParse(budgetController.text) ?? budgetLimit;
-                //currency = currencyController.text.isNotEmpty ? currencyController.text : currency; // eliminar
+                budgetLimit = currencyService.convertFromTo(
+                  double.tryParse(budgetController.text) ?? budgetLimit,
+                  currencyService.currentCurrencyType,
+                  CurrencyType.EUR,
+                );
 
                 // Guardar límites por categoría
                 for (var cat in predefinedCategories) {
                   final val = double.tryParse(categoryControllers[cat]!.text);
                   if (val != null) {
-                    categoryLimits[cat] = val;
+                    // Convierte de la moneda actual a euros antes de guardar
+                    final valorEnEuros = currencyService.convertFromTo(
+                      val,
+                      currencyService.currentCurrencyType,
+                      CurrencyType.EUR,
+                    );
+                    categoryLimits[cat] = valorEnEuros;
                   }
                 }
 
@@ -333,8 +385,6 @@ class _BudgetHomePageState extends State<BudgetHomePage> {
 
 
   String formatAmount(Transaction t) {
-    //String sign = t.type == TransactionType.expense ? '-' : '+'; // eliminar
-    //return '$sign$currency${t.amount.toStringAsFixed(2)}';
     bool signed = t.type == TransactionType.expense ;
     return currencyService.formatCurrentCurrency(currencyService.convertToCurrent(t.amount), signed: signed);
   }
